@@ -28,9 +28,13 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy_key.pem
           chmod 600 ~/.ssh/deploy_key.pem
+<<<<<<< HEAD
           echo "Connecting to EC2_HOST: ${{ secrets.EC2_HOST }}"
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
           echo "SSH configuration completed"
+=======
+          ssh-keyscan ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+>>>>>>> b998ca8 (Fix deployment workflow: update ssh-keyscan command and set correct repository URL)
 
       - name: Deploy to EC2
         run: |
@@ -39,6 +43,9 @@ jobs:
           ssh -i ~/.ssh/deploy_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             # Navigate to application directory
             cd ${{ secrets.APP_DIRECTORY }}
+            
+            # Ensure we're pulling from the correct repository
+            git remote set-url origin https://github.com/actuallytayyab/vacc-test.git
             
             # Pull latest code
             git pull origin master
