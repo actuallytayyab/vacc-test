@@ -43,17 +43,17 @@ jobs:
             # Pull latest code
             git pull origin master
             
-            # Stop existing containers
-            docker-compose down || true
+            # Stop existing containers (use sudo as fallback)
+            sudo docker-compose down || docker-compose down || true
             
             # Remove old images (optional, to save disk space)
-            docker system prune -f || true
+            sudo docker system prune -f || docker system prune -f || true
             
-            # Build and start containers
-            docker-compose up -d --build
+            # Build and start containers (use sudo as fallback)
+            sudo docker-compose up -d --build || docker-compose up -d --build
             
             # Show running containers
-            docker-compose ps
+            sudo docker-compose ps || docker-compose ps || true
             
             echo "Deployment completed successfully!"
           EOF
@@ -64,13 +64,13 @@ jobs:
           sleep 15
           
           echo "Checking Docker container status..."
-          # List running containers
-          ssh -i ~/.ssh/deploy_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "docker ps"
+          # List running containers (use sudo as fallback)
+          ssh -i ~/.ssh/deploy_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "sudo docker ps" || echo "Cannot list containers"
           
           echo "Checking backend health..."
           # Check if backend is running (optional, won't fail the deployment)
           ssh -i ~/.ssh/deploy_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-            "docker exec vaccine-backend node -e \"require('http').get('http://localhost:3000/api/health', (res) => { console.log('Backend Health:', res.statusCode === 200 ? 'OK' : 'FAILED'); process.exit(res.statusCode === 200 ? 0 : 1) })\"" || echo "Health check skipped - service may still be starting"
+            "sudo docker exec vaccine-backend node -e \"require('http').get('http://localhost:3000/api/health', (res) => { console.log('Backend Health:', res.statusCode === 200 ? 'OK' : 'FAILED'); process.exit(res.statusCode === 200 ? 0 : 1) })\"" || echo "Health check skipped - service may still be starting"
           
           echo "✅ Deployment pipeline completed!"
 
