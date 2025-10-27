@@ -36,7 +36,7 @@ jobs:
         run: |
           echo "Deploying to EC2..."
           
-          ssh -i ~/.ssh/deploy_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} bash << 'REMOTE_SCRIPT'
+          ssh -i ~/.ssh/deploy_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} bash <<EOF
           set -e
           
           echo "Current directory: $(pwd)"
@@ -83,7 +83,7 @@ jobs:
           sudo docker ps -a
           
           echo "Deployment completed successfully!"
-REMOTE_SCRIPT
+EOF
 
       - name: Verify deployment
         run: |
