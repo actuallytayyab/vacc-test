@@ -36,24 +36,20 @@ jobs:
         run: |
           echo "Deploying to EC2..."
           
-          ssh -i ~/.ssh/deploy_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'REMOTE_SCRIPT'
+          ssh -i ~/.ssh/deploy_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} bash << 'REMOTE_SCRIPT'
           set -e
           
-          APP_DIR="/home/ubuntu/vn"
-          
           echo "Current directory: $(pwd)"
-          echo "Navigating to: $APP_DIR"
+          echo "Navigating to /home/ubuntu/vn..."
           
-          # Check if directory exists
-          if [ ! -d "$APP_DIR" ]; then
-            echo "ERROR: Directory $APP_DIR does not exist!"
+          # Navigate directly to application directory
+          cd /home/ubuntu/vn || {
+            echo "ERROR: Cannot cd to /home/ubuntu/vn"
             echo "Available directories in /home/ubuntu:"
             ls -la /home/ubuntu/ || true
             exit 1
-          fi
+          }
           
-          # Navigate to application directory
-          cd "$APP_DIR"
           echo "Successfully navigated to: $(pwd)"
           
           echo "Directory contents:"
