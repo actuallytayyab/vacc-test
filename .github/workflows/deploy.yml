@@ -35,55 +35,27 @@ jobs:
       - name: Deploy to EC2
         run: |
           echo "Deploying to EC2..."
-          
-          ssh -i ~/.ssh/deploy_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} bash <<EOF
-          set -e
-          
-          echo "Current directory: $(pwd)"
-          echo "Navigating to /home/ubuntu/vn..."
-          
-          # Navigate directly to application directory
-          cd /home/ubuntu/vn || {
-            echo "ERROR: Cannot cd to /home/ubuntu/vn"
-            echo "Available directories in /home/ubuntu:"
-            ls -la /home/ubuntu/ || true
-            exit 1
-          }
-          
-          echo "Successfully navigated to: $(pwd)"
-          
-          echo "Directory contents:"
-          ls -la
-          
-          echo "Checking git status..."
-          git status || echo "Warning: Not a git repo or git not configured"
-          
-          # Ensure we're pulling from the correct repository
-          git remote set-url origin https://github.com/actuallytayyab/vacc-test.git || echo "Warning: git remote already set"
-          
-          # Pull latest code
-          git pull origin master || echo "Warning: git pull failed"
-          
-          echo "Stopping existing containers..."
-          sudo docker-compose down || echo "No containers to stop"
-          
-          echo "Pruning old images..."
-          sudo docker system prune -f || echo "Pruning failed"
-          
-          echo "Building and starting containers..."
-          sudo docker-compose up -d --build
-          
-          echo "Waiting for containers to start..."
-          sleep 5
-          
-          echo "Checking running containers:"
-          sudo docker-compose ps
-          
-          echo "All Docker containers:"
-          sudo docker ps -a
-          
-          echo "Deployment completed successfully!"
-EOF
+          ssh -i ~/.ssh/deploy_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "cd /home/ubuntu/vn && \
+            echo 'Current directory: '\$(pwd) && \
+            echo 'Directory contents:' && \
+            ls -la && \
+            echo 'Checking git status...' && \
+            git status || echo 'Warning: Not a git repo' && \
+            git remote set-url origin https://github.com/actuallytayyab/vacc-test.git || echo 'Warning: git remote already set' && \
+            git pull origin master || echo 'Warning: git pull failed' && \
+            echo 'Stopping existing containers...' && \
+            sudo docker-compose down || echo 'No containers to stop' && \
+            echo 'Pruning old images...' && \
+            sudo docker system prune -f || echo 'Pruning failed' && \
+            echo 'Building and starting containers...' && \
+            sudo docker-compose up -d --build && \
+            echo 'Waiting for containers to start...' && \
+            sleep 5 && \
+            echo 'Checking running containers:' && \
+            sudo docker-compose ps && \
+            echo 'All Docker containers:' && \
+            sudo docker ps -a && \
+            echo 'Deployment completed successfully!'"
 
       - name: Verify deployment
         run: |
