@@ -49,6 +49,18 @@ jobs:
           channel: 'stable'
           cache: true
 
+      # Ensure Android platform exists for admin app (idempotent)
+      - name: Ensure Android platform for admin app
+        working-directory: ./admin
+        run: |
+          flutter create --platforms=android .
+
+      # Ensure Android platform exists for doctor app (idempotent)
+      - name: Ensure Android platform for doctor app
+        working-directory: ./doctor
+        run: |
+          flutter create --platforms=android .
+
       # Install dependencies for admin app
       - name: Install admin app dependencies
         working-directory: ./admin
