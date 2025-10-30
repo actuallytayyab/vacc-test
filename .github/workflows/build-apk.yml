@@ -1,0 +1,84 @@
+name: Build Flutter APK Artifacts
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-apks:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Checkout code from repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Setup Flutter with stable channel, version 3.24.0
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      # Verify Flutter installation and display version info
+      - name: Verify Flutter installation
+        run: |
+          flutter --version
+          flutter doctor -v
+
+      # Install dependencies for admin app
+      - name: Install admin app dependencies
+        working-directory: ./admin
+        run: |
+          flutter pub get
+
+      # Install dependencies for doctor app
+      - name: Install doctor app dependencies
+        working-directory: ./doctor
+        run: |
+          flutter pub get
+
+      # Install dependencies for patient app
+      - name: Install patient app dependencies
+        working-directory: ./patient
+        run: |
+          flutter pub get
+
+      # Build unsigned release APK for admin app
+      - name: Build admin release APK
+        working-directory: ./admin
+        run: |
+          flutter build apk --release
+
+      # Build unsigned release APK for doctor app
+      - name: Build doctor release APK
+        working-directory: ./doctor
+        run: |
+          flutter build apk --release
+
+      # Build unsigned release APK for patient app
+      - name: Build patient release APK
+        working-directory: ./patient
+        run: |
+          flutter build apk --release
+
+      # Package all APKs into build_outputs folder
+      - name: Package APK artifacts
+        run: |
+          mkdir -p build_outputs
+          cp admin/build/app/outputs/flutter-apk/app-release.apk build_outputs/admin_release.apk
+          cp doctor/build/app/outputs/flutter-apk/app-release.apk build_outputs/doctor_release.apk
+          cp patient/build/app/outputs/flutter-apk/app-release.apk build_outputs/patient_release.apk
+          ls -lh build_outputs/
+
+      # Upload all APKs as a single artifact named release-apks
+      - name: Upload release APKs artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-apks
+          path: build_outputs/
+          retention-days: 30
+
