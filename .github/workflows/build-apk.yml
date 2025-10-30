@@ -15,8 +15,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Setup Flutter (newer) for patient app needing Dart 3.9.x
-      - name: Setup Flutter for patient (3.35.7)
+      # Setup Flutter 3.35.7 (stable) for all apps
+      - name: Setup Flutter (3.35.7)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.35.7'
@@ -28,26 +28,6 @@ jobs:
         run: |
           flutter --version
           flutter doctor -v
-
-      # Install dependencies for patient app
-      - name: Install patient app dependencies
-        working-directory: ./patient
-        run: |
-          flutter pub get
-
-      # Build unsigned release APK for patient app
-      - name: Build patient release APK
-        working-directory: ./patient
-        run: |
-          flutter build apk --release
-
-      # Switch Flutter to an older stable that still supports Android v1 embedding for admin/doctor
-      - name: Setup Flutter for admin/doctor (3.13.9)
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.13.9'
-          channel: 'stable'
-          cache: true
 
       # Ensure Android platform exists for admin app (idempotent)
       - name: Ensure Android platform for admin app
@@ -61,6 +41,22 @@ jobs:
         run: |
           flutter create --platforms=android .
 
+      # Ensure compileSdk is 34 for admin/doctor (Groovy) and patient (Kotlin DSL)
+      - name: Set compileSdkVersion to 34 for all apps
+        run: |
+          # admin (Groovy)
+          if [ -f admin/android/app/build.gradle ]; then
+            sed -i 's/compileSdkVersion [0-9]\+/compileSdkVersion 34/' admin/android/app/build.gradle || true
+          fi
+          # doctor (Groovy)
+          if [ -f doctor/android/app/build.gradle ]; then
+            sed -i 's/compileSdkVersion [0-9]\+/compileSdkVersion 34/' doctor/android/app/build.gradle || true
+          fi
+          # patient (Kotlin DSL)
+          if [ -f patient/android/app/build.gradle.kts ]; then
+            sed -i 's/compileSdk *= *[0-9]\+/compileSdk = 34/' patient/android/app/build.gradle.kts || true
+          fi
+
       # Install dependencies for admin app
       - name: Install admin app dependencies
         working-directory: ./admin
@@ -73,6 +69,12 @@ jobs:
         run: |
           flutter pub get
 
+      # Install dependencies for patient app
+      - name: Install patient app dependencies
+        working-directory: ./patient
+        run: |
+          flutter pub get
+
       # Build unsigned release APK for admin app
       - name: Build admin release APK
         working-directory: ./admin
@@ -82,6 +84,12 @@ jobs:
       # Build unsigned release APK for doctor app
       - name: Build doctor release APK
         working-directory: ./doctor
+        run: |
+          flutter build apk --release
+
+      # Build unsigned release APK for patient app
+      - name: Build patient release APK
+        working-directory: ./patient
         run: |
           flutter build apk --release
 
